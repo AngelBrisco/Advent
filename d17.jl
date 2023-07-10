@@ -77,20 +77,20 @@ function check_vel(velx, vely, xt, yt)
 end
 
 xt = [282,314]
-yt = [-45,80]
+yt = [-80,-45]
 #xt = [20,30]
 #yt = [-10,-5]
 
-pos_velocities2 = []
-for vely in sort(unique(vcat([pos_y(num_y,i) for i in yt[1]:yt[2]]...)))
-    for velx in sort(unique(vcat([pos_x(i) for i in xt[1]:xt[2]]...)))
-        if any(check_vel2(velx, vely, xt, yt))
-            push!(pos_velocities2, [velx, vely])
+pos_velocities = []
+for vely in unique(vcat([pos_y(num_y,i) for i in yt[1]:yt[2]]...))
+    for velx in unique(vcat([pos_x(i) for i in xt[1]:xt[2]]...))
+        if any(check_vel(velx, vely, xt, yt))
+            push!(pos_velocities, [velx, vely])
         end
     end
 end
 
-pos_velocities2
+unique(pos_velocities2)
 unique(pos_velocities)
 for i in pos_velocities2
     if (i in pos_velocities)==false
@@ -118,8 +118,60 @@ function check_vel2(velx, vely, xt, yt)
     bool_X = (xpos.>=xt[1]).&(xpos.<=xt[2])
     bool_y = (ypos.>=yt[1]).&(ypos.<=yt[2])
     any(bool_X .& bool_y)
-    ypos
 end
 
 check_vel2(9, 1, xt, yt)
 check_vel(9, 1, xt, yt)
+
+
+
+function part2(xf_min, xf_max, yf_min, yf_max)
+    
+    function hits_target(vx, vy)
+        x = 0
+        y = 0
+        while true
+            # breaking conditions
+            (x > xf_max) && return false
+            ((vx == 0) & !(xf_min <= x <= xf_max)) && return false
+            ((vx == 0) & (y < yf_min)) && return false
+            
+            # target condition
+            ((xf_min <= x <= xf_max) & (yf_min <= y <= yf_max)) && return true
+            
+            x += vx
+            y += vy
+            
+            (vx > 0)&&(vx -= 1)
+            vy -= 1
+        end
+    end
+    
+    y_max = maximum([abs(yf_min), abs(yf_max)])
+    distinct_velocitys = 0
+    
+    for vx in 1:(xf_max + 1)
+        for vy in -y_max:y_max+1
+            distinct_velocitys += hits_target(vx, vy)
+        end
+    end
+
+    return distinct_velocitys
+end
+
+part2(xt[1], xt[2], yt[1], yt[2])
+using BenchmarkTools
+@benchmark(part2(xt[1], xt[2], yt[1], yt[2]))
+
+function fullcheck(xt,yt)
+    pos_velocities = []
+    for vely in unique(vcat([pos_y(num_y,i) for i in yt[1]:yt[2]]...))
+        for velx in unique(vcat([pos_x(i) for i in xt[1]:xt[2]]...))
+            if any(check_vel(velx, vely, xt, yt))
+                push!(pos_velocities, [velx, vely])
+            end
+        end
+    end
+    pos_velocities
+end
+@benchmark(fullcheck(xt,yt))
